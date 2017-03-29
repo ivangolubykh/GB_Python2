@@ -1,6 +1,7 @@
 #!/usr/bin/python3
 import unittest
 import hashlib
+import os
 __author__ = 'Иван Голубых'
 
 
@@ -9,7 +10,23 @@ def split_file(filename, length_fragment):
      Принимает имя исходного файла и размер кусков в байтах.
      Возвращает количество получившихся файлов-фрагментов.
     '''
-    pass
+    if os.path.isfile(filename):
+        file = open(filename, 'rb')
+        if os.path.getsize(filename) < length_fragment:
+            length_fragment = os.path.getsize(filename)
+        count = 0
+        for _ in range(0, os.path.getsize(filename),
+                       length_fragment):
+            count += 1
+            data = file.read(length_fragment)
+            file_i = open(filename+'_'+str(count), 'wb')
+            file_i.write(data)
+            file_i.close()
+        fragment = file.read(5093)
+        file.close()
+        return count
+    print('Ошибка: файл не существует.')
+    return None
 
 
 def creade_mda_file(dir_name, file_name_md5):
@@ -46,7 +63,7 @@ class TestThis(unittest.TestCase):
     def test_split_file(self):
         ''' Для этого теста создал папку test_split_file с 1 фалом
         '''
-        self.assertEqual(creade_mda_file('./test_split_file/README.MD', 1000),
+        self.assertEqual(split_file('./test_split_file/README.MD', 1000),
                          4)
 
     def test_creade_mda_file(self):
@@ -61,7 +78,7 @@ class TestThis(unittest.TestCase):
         ''' Для этого теста использую папку test_creade_mda_file. Использую
         только имена файлов без расширения.
         '''
-        self.assertEqual(creade_mda_file('./test_split_file/README.MD', 1000),
+        self.assertEqual(join_file('./test_split_file/README.MD', 1000),
                          2313)
 
     def test_main(self):

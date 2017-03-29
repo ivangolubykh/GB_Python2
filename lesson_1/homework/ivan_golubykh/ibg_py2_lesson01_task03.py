@@ -4,6 +4,7 @@ import hashlib
 import os
 import glob
 from zipfile import ZipFile
+import magic  # pip3 install python-magic
 __author__ = 'Иван Голубых'
 
 
@@ -78,7 +79,6 @@ def join_file(dir_name, file_name_md5, file_name_joined):
             data_file = file.read()
             hash_file[hashlib.md5(data_file).hexdigest()] = x
             file.close()
-            print(hash_file)
 
     file_joined = open(file_name_joined, 'wb')
     file_md5 = open(file_name_md5, 'r')
@@ -94,7 +94,7 @@ def join_file(dir_name, file_name_md5, file_name_joined):
 def main():
     ''' Главная функция должна:
     1) распаковать все архивы в нужном каталоге
-    2) Вызвать функцию склеивания для каждого каталога и получит склеенные
+    2) Вызвать функцию склеивания для каждого каталога и получить склеенные
     файлы.
     3) определить тип получившихся фалов и вывести в консоль.
     4) вернуть значение 0 (ноль), когда будет написана отлажена эта функция.
@@ -106,7 +106,17 @@ def main():
         zip_handler = ZipFile(zip_filename, 'r')
         zip_handler.extractall()
 
-    return 1
+    # 2) Вызвать функцию склеивания для каждого каталога и получить склеенные
+    # файлы.
+    dir_list = tuple(x for x in os.listdir() if os.path.isdir(x))
+    for x in dir_list:
+        join_file(x, os.path.join(x, 'parts.md5'), x+'.joined')
+
+        # 3) определить тип получившихся фалов и вывести в консоль.
+        print('"'+x+'.joined" - ', magic.from_file(x+'.joined'))
+
+    os.chdir(start_dir)
+    return 0
 
 
 class TestThis(unittest.TestCase):

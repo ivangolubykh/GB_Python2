@@ -35,7 +35,20 @@ def creade_mda_file(dir_name, file_name_md5):
      Принимает имя директории с файлами, имя файла для записи результатов.
      Возвращает количество просмотренных файлов.
     '''
-    pass
+    path, file = os.path.split(file_name_md5)
+    if file in os.listdir(dir_name):
+        return "Ошибка: файл " + file_name_md5 + ' уже есть в той же папке, '\
+            'что и обрабатываемые файлы. Вносит изменения опасно.'
+    md5_file = open(file_name_md5, 'w')
+    count = 0
+    for x in os.listdir(dir_name):
+        file = open(os.path.join(dir_name, x), 'rb')
+        data = file.read()
+        file.close()
+        md5_file.write(hashlib.md5(data).hexdigest()+'\n')
+        count += 1
+    md5_file.close()
+    return count
 
 
 def join_file(dir_name, file_name_md5, file_name_joined):
@@ -70,7 +83,7 @@ class TestThis(unittest.TestCase):
         ''' Для этого теста создал папку test_creade_mda_file с 3 фалами
         '''
         self.assertEqual(creade_mda_file('./test_creade_mda_file',
-                                         './test_creade_mda_file/parts.md5'
+                                         './test_creade_mda_file.md5'
                                          ),
                          3)
 

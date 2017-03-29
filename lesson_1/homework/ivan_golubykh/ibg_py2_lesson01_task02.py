@@ -31,9 +31,17 @@ def main():
     3) обрезать лишнюю длину файла
     4) вернуть значение 0 (ноль) при успехе
     '''
-    pass
-    print(calc_hash(b'I love Python', 'md5'))
-    return 1
+    file = open('../need_hashes.csv', 'rb+')
+    rezault = ''
+    for x in file:
+        data_string = x.decode().split(';')
+        if len(data_string) > 2:
+            rezault += calc_hash(data_string[0], data_string[1]) + '\n'
+    file.seek(0, 0)
+    file.write(rezault.encode())
+    file.truncate()
+    file.close()
+    return 0
 
 
 class TestThis(unittest.TestCase):

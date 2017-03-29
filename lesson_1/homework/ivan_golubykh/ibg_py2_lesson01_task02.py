@@ -8,12 +8,19 @@ __author__ = 'Иван Голубых'
 def calc_hash(string, method):
     ''' Функция должна получать строку и метод вычисления хэш-суммы, а на
     выходе выдавать хеш-сумму строки.
-     Допустимые методы: 'whirlpool', 'sha384', 'MD4', 'SHA1',
-    'ecdsa-with-SHA1', 'SHA224', 'DSA-SHA', 'sha256', 'SHA256', 'SHA512',
-    'sha1', 'sha512', 'md4', 'RIPEMD160', 'dsaEncryption', 'MD5', 'DSA',
-    'sha', 'dsaWithSHA', 'md5', 'ripemd160', 'SHA', 'SHA384', 'sha224'.
+     Допустимые методы: sha224, sha1, md5, sha384, sha256, sha512.
     '''
-    pass
+    if method in hashlib.algorithms_guaranteed:
+        if isinstance(string, str):
+            string = string.encode()
+        if isinstance(string, bytes):
+            func = getattr(hashlib, method)
+            return func(string).hexdigest()
+        print('Ошибка: Недопустимые данные. Должна быть строка или байты')
+        return False
+    print('Ошибка: Недопустимый метод. Допустимые методы такие: ' +
+          ', '.join(hashlib.algorithms_guaranteed))
+    return False
 
 
 def main():
@@ -25,12 +32,8 @@ def main():
     4) вернуть значение 0 (ноль) при успехе
     '''
     pass
-    print(hashlib.algorithms_available)
-    func = getattr(hashlib, "md5")
-    print('строка:', hashlib.md5(b'I love Python').hexdigest(),
-          ' \nпоследовательность байтов:',
-          str(func(b'I love Python').digest()))
-    return 0
+    print(calc_hash(b'I love Python', 'md5'))
+    return 1
 
 
 class TestThis(unittest.TestCase):

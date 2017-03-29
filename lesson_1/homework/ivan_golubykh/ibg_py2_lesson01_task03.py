@@ -41,7 +41,9 @@ def creade_mda_file(dir_name, file_name_md5):
             'что и обрабатываемые файлы. Вносит изменения опасно.'
     md5_file = open(file_name_md5, 'w')
     count = 0
-    for x in os.listdir(dir_name):
+    list_dir = os.listdir(dir_name)
+    list_dir.sort()
+    for x in list_dir:
         file = open(os.path.join(dir_name, x), 'rb')
         data = file.read()
         file.close()
@@ -53,12 +55,38 @@ def creade_mda_file(dir_name, file_name_md5):
 
 def join_file(dir_name, file_name_md5, file_name_joined):
     ''' Функция "склеивания" файла на основе упорядоченных хэш-сумм.
-    Используются только имена файлов без расширения.
      Принимает имя директории с файлами-кусочками, имя файла с
     хэш-суммами, имя выходного файла.
      Возвращает размер полученного файла.
     '''
-    pass
+    ''' Был выбор либо 2 раза читать все файлы (для расчёта сумм и для
+    склеивания), либо все файлы загрузить в память. Я решил, что рациональней
+    читать файлы 2 раза, хот это и медленнее, зато можно обрабатывать очень
+    большие файл в любом количестве, лишь бы любой отдельный файл уместился
+    в оперативной памяти.
+    '''
+    path, file = os.path.split(file_name_md5)
+    block_files = [file]  # список файлов, которые не надо обрабатывать
+    path, file = os.path.split(file_name_joined)
+    block_files.append(file)
+    hash_file = {}  # словарь соотнесения хешей с именами файлов
+    for x in os.listdir(dir_name):
+        if x not in block_files:
+            file = open(os.path.join(dir_name, x), 'rb')
+            data_file = file.read()
+            hash_file[hashlib.md5(data_file).hexdigest()] = x
+            file.close()
+            print(hash_file)
+
+    file_joined = open(file_name_joined, 'wb')
+    file_md5 = open(file_name_md5, 'r')
+    for x in file_md5:
+        file = open(os.path.join(dir_name, hash_file[x.rstrip()]), 'rb')
+        file_joined.write(file.read())
+        file.close()
+    file_md5.close()
+    file_joined.close()
+    return os.path.getsize(file_name_joined)
 
 
 def main():
@@ -80,19 +108,20 @@ class TestThis(unittest.TestCase):
                          4)
 
     def test_creade_mda_file(self):
-        ''' Для этого теста создал папку test_creade_mda_file с 3 фалами
+        ''' Для этого теста создал папку test_creade_mda_file с 4 фалами
         '''
         self.assertEqual(creade_mda_file('./test_creade_mda_file',
                                          './test_creade_mda_file.md5'
                                          ),
-                         3)
+                         4)
 
     def test_join_file(self):
         ''' Для этого теста использую папку test_creade_mda_file. Использую
         только имена файлов без расширения.
         '''
-        self.assertEqual(join_file('./test_split_file/README.MD', 1000),
-                         2313)
+        self.assertEqual(join_file('./test_creade_mda_file',
+                                   './test_creade_mda_file.md5',
+                                   'README.MD_joined'), 3093)
 
     def test_main(self):
         self.assertEqual(main(), 0)

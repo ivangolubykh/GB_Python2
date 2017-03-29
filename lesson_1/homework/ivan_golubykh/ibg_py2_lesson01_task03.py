@@ -2,6 +2,8 @@
 import unittest
 import hashlib
 import os
+import glob
+from zipfile import ZipFile
 __author__ = 'Иван Голубых'
 
 
@@ -97,6 +99,13 @@ def main():
     3) определить тип получившихся фалов и вывести в консоль.
     4) вернуть значение 0 (ноль), когда будет написана отлажена эта функция.
     '''
+    # 1) распаковать все архивы в нужном каталоге:
+    start_dir = os.getcwd()
+    os.chdir('../files')
+    for zip_filename in glob.iglob('*.zip'):
+        zip_handler = ZipFile(zip_filename, 'r')
+        zip_handler.extractall()
+
     return 1
 
 

@@ -1,10 +1,9 @@
 #!/usr/bin/python3
 # Сервер игры "Запоминалка"
-
 import socketserver
 import random
-
 __author__ = 'Иван Голубых'
+HOST, PORT = 'localhost', 9999
 
 
 class MemTCPHandler(socketserver.BaseRequestHandler):
@@ -13,8 +12,11 @@ class MemTCPHandler(socketserver.BaseRequestHandler):
         self.data = self.request.recv(1024).decode()
         print("Клиент {} сообщает {}".format(self.client_address[0],
                                              self.data))
-
-        if self.data == "I_WANNA_PLAY":
+        if self.data == "Test":
+            ''' Это для проведения unit-теста.
+            '''
+            self.request.sendall(bytes('Test=ok', 'utf-8'))
+        elif self.data == "I_WANNA_PLAY":
             nums = random.sample(range(1, 100), 18) * 2
             random.shuffle(nums)
             s_nums = [str(n) for n in nums]
@@ -26,7 +28,6 @@ class MemTCPHandler(socketserver.BaseRequestHandler):
 
 
 def main():
-    HOST, PORT = 'localhost', 9999
     server = socketserver.TCPServer((HOST, PORT), MemTCPHandler)
     print('Сервер игры запущен')
     server.serve_forever()

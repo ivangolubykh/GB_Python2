@@ -5,6 +5,9 @@ import unittest
 import datetime
 __author__ = 'Иван Голубых'
 HOST, PORT = 'localhost', 9999
+TRANZ_SERV = 0x00
+TRANZ_PAY = 0x01
+TRANZ_INDEX = 0x02
 
 
 def datetime_code(date):
@@ -56,6 +59,62 @@ def datetime_code(date):
     return rez
 
 
+def tranz_code(tranz_type, tranz_id, *args):
+    ''' Функция для кодирования тела пакета, т.е. кодирования транзакции.
+    Принимает список [Тип_транзакции_(int), Данные_транзакции_(int),
+                      Сумма_в_копейка_(int)_(необязательно)]
+
+    >>> tranz_code(1, 2, 15)
+    b'zz\\x01\\x00\\x00\\x00\\x02\\x00\\x00\\x00\\x00\\x00\\x00\\x00\\x0f'
+
+    * Транзакция состоит из 2-х полей - тип транзакции и данные:
+            * Тип транзакции:
+                * 0x00 - сервисная транзакция. Данные:
+                    * 0x00 - включение
+                    * 0x01 - перезагрузка
+                    * 0x02 - выключение
+                    * 0x03 - активация датчика X
+                    * 0x04 - блокировка, требуется инкассация
+                * 0x01 - платёжная транзакция. Данные:
+                    * 4 байта: id организации для перевода средств
+                    * 8 байт: сумма транзакции в копейках
+                * 0x02 - инкассация. Данные:
+                    * 4 байта: id сотрудника-инкассатора
+                    * 8 байт: сумма инкассации в копейках
+    '''
+    def err_tranz():
+        raise 'Неверный тип транзакции!'
+
+    if tranz_type not in (0, 1, 2):
+        err_tranz()
+
+    rez = b'zz'
+    if tranz_type == 0 and int(tranz_id) in (0, 1, 2, 3, 4):
+        rez += bytes([tranz_type, tranz_id])
+    elif (tranz_type == 1 or tranz_type == 2) and type(tranz_id) == int and\
+            type(args[0]) == int:
+        tranz_id = '{:0>32}'.format(bin(tranz_id)[2:])
+        rez += bytes([tranz_type,
+                      int(tranz_id[:8], 2),
+                      int(tranz_id[8:16], 2),
+                      int(tranz_id[16:24], 2),
+                      int(tranz_id[24:], 2),
+                      ])
+        summ = '{:0>64}'.format(bin(args[0])[2:])
+        rez += bytes([int(summ[:8], 2),
+                      int(summ[8:16], 2),
+                      int(summ[16:24], 2),
+                      int(summ[24:32], 2),
+                      int(summ[32:40], 2),
+                      int(summ[40:48], 2),
+                      int(summ[48:56], 2),
+                      int(summ[56:], 2),
+                      ])
+    else:
+        err_tranz()
+    return rez
+
+
 def send_string(string):
     print('Отправляются данные: \'{}\''.format(string))
     sock = socket.socket(socket.AF_INET, socket.SOCK_STREAM)
@@ -76,6 +135,7 @@ def main():
     datetime_01 = datetime.datetime(year=2017, month=4, day=1, hour=5,
                                     minute=24, second=15)
     datetime_code(datetime_01)
+    tranz_code(1, 2, 15)
     # __add__  ->  +
 
 
